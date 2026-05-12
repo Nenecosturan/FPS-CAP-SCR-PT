@@ -72,7 +72,7 @@ local UI = {}
 function UI:Smooth(obj, rad) Instance.new("UICorner", obj).CornerRadius = UDim.new(0, rad) end
 function UI:Stroke(obj, color, trans)
     local s = Instance.new("UIStroke", obj)
-    s.Thickness = 1.5; s.Color = color or Theme.Accent
+    s.Thickness = 1; s.Color = color or Theme.Accent
     s.Transparency = trans or 0.4; s.ApplyStrokeMode = "Border"
 end
 
@@ -90,11 +90,11 @@ HUDLabel.Size = UDim2.new(1, 0, 1, 0); HUDLabel.BackgroundTransparency = 1; HUDL
 
 -- [4. ANA PENCERE (CANVASGROUP)]
 local Main = Instance.new("CanvasGroup", Zenith)
-Main.Size = UDim2.new(0, 460, 0, 420)
+Main.Size = UDim2.new(0, 230, 0, 210)
 Main.Position = UDim2.new(0.5, -230, 0.5, -210)
 Main.BackgroundColor3 = Theme.Main
 Main.BorderSizePixel = 0
-Main.GroupTransparency = 1
+Main.GroupTransparency = 0.75
 UI:Smooth(Main, 18) 
 UI:Stroke(Main, Theme.Accent, 0.3)
 
@@ -449,84 +449,5 @@ EnterBtn.MouseButton1Click:Connect(function()
         EnterBtn.BackgroundColor3 = Theme.Accent
     end
 end)
-
---- ============================================================================
--- [GÜNCEL: SAĞ ÜST BOYUTLANDIRMA VE MOBİL ETKİLEŞİM KORUMASI]
--- ============================================================================
-
--- 1. ÜST BUTONLARI SOLA KAYDIRMA (Yer Açmak İçin)
--- Mevcut Btns frame'inin pozisyonunu güncelle:
-Btns.Position = UDim2.new(1, -155, 0, 0) -- Butonları 35 piksel daha sola çektik
-
--- 2. BOYUTLANDIRMA BUTONU (Sağ Üst Köşe)
-local ResizeIcon = Instance.new("TextButton", Main)
-ResizeIcon.Name = "ResizeIcon"
-ResizeIcon.Size = UDim2.new(0, 24, 0, 24)
-ResizeIcon.Position = UDim2.new(1, -28, 0, 10) -- Sağ üst köşede boş kalan yere yerleşti
-ResizeIcon.BackgroundTransparency = 1
-ResizeIcon.Text = "⛶" -- Modern genişletme ikonu
-ResizeIcon.TextColor3 = Theme.SubText
-ResizeIcon.Font = "GothamBold"
-ResizeIcon.TextSize = 18
-ResizeIcon.ZIndex = 11
-
-local isResizing = false
-local isDragging = false
-
--- 3. SÜRÜKLEME VE BOYUTLANDIRMA MANTIĞI
-Topbar.InputBegan:Connect(function(input) 
-    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not isResizing then 
-        isDragging = true
-        dragStart = input.Position
-        startPos = Main.Position 
-    end 
-end)
-
-ResizeIcon.InputBegan:Connect(function(input)
-    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-        -- Hem Mikro hem de Normal küçültme modunda kontrol yapıyoruz
-        if isMicro or minimized then
-            ShowNotification("boyut ayarlama işlemi için scriptin tam ekran olması lazım")
-            return
-        end
-        
-        isResizing = true
-        resizeStartPos = input.Position
-        startSize = Main.Size
-        
-        -- MOBİL KORUMASI: Boyutlandırma sırasında barlarla etkileşimi kes
-        Content.ScrollingEnabled = false
-        Main.ClipsDescendants = true -- İçeriklerin dışarı taşmasını önler
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    -- Pencere Taşıma (Dragging)
-    if isDragging and not isResizing then
-        local delta = input.Position - dragStart
-        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-    
-    -- Pencere Boyutlandırma (Resizing)
-    if isResizing then
-        local delta = input.Position - resizeStartPos
-        -- math.clamp ile sınırları belirledik (Min Genişlik: 350, Min Yükseklik: 300)
-        local newWidth = math.clamp(startSize.X.Offset + delta.X, 350, 900)
-        local newHeight = math.clamp(startSize.Y.Offset + delta.Y, 300, 700)
-        
-        Main.Size = UDim2.new(0, newWidth, 0, newHeight)
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        isDragging = false
-        isResizing = false
-        -- Etkileşimi geri aç
-        Content.ScrollingEnabled = true
-    end
-end)
-
-
 
 print("• ZENITH V18: AESTHETIC ULTRA LOADED. [Bağımsız Kapanış Ekranı & Otomatik Başlama Aktif]")
