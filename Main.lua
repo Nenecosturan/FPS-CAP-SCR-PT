@@ -317,90 +317,138 @@ end)
 UserInputService.InputEnded:Connect(function() dragging = false end)
 
 -- ============================================================================
--- [GELİŞTİRİLMİŞ AGRESİF DEV PANEL VE MOTOR OPTİMİZASYONLARI]
+-- [GELİŞTİRİLMİŞ MOTOR: DEV PANEL & AGRESİF OPTİMİZASYON SİSTEMİ]
 -- ============================================================================
 
--- 1. YENİ BİLEŞEN: Şifre Giriş Alanı
-UI:Paragraph("Developer Access", "Panel açmak için şifreyi aşağıya girin.")
-local DevTrigger = Instance.new("TextBox", Content)
-DevTrigger.Size = UDim2.new(1, -10, 0, 45); DevTrigger.BackgroundColor3 = Theme.Secondary; DevTrigger.TextColor3 = Theme.Accent; DevTrigger.PlaceholderText = "Şifreyi Buraya Yaz..."; DevTrigger.Font = "GothamBold"; DevTrigger.Text = ""; UI:Smooth(DevTrigger, 10); UI:Stroke(DevTrigger, Theme.Accent, 0.6)
+-- 1. ANA MENÜ ŞİFRE VE ENTER SİSTEMİ
+UI:Paragraph("Developer Access", "Panel açmak için şifreyi girip ENTER'a bas.")
+local InputFrame = Instance.new("Frame", Content)
+InputFrame.Size = UDim2.new(1, -10, 0, 85); InputFrame.BackgroundTransparency = 1
 
--- 2. DEV PANEL TASARIMI
+local DevInput = Instance.new("TextBox", InputFrame)
+DevInput.Size = UDim2.new(1, 0, 0, 40); DevInput.BackgroundColor3 = Theme.Secondary; DevInput.TextColor3 = Theme.Text; DevInput.PlaceholderText = "Şifre (dev-zenith)"; DevInput.Font = "GothamMedium"; DevInput.TextSize = 13; UI:Smooth(DevInput, 10); UI:Stroke(DevInput, Theme.Accent, 0.6)
+
+local EnterBtn = Instance.new("TextButton", InputFrame)
+EnterBtn.Size = UDim2.new(1, 0, 0, 35); EnterBtn.Position = UDim2.new(0, 0, 0, 50); EnterBtn.BackgroundColor3 = Theme.Accent; EnterBtn.TextColor3 = Color3.new(1,1,1); EnterBtn.Font = "GothamBold"; EnterBtn.Text = "ENTER"; EnterBtn.TextSize = 14; UI:Smooth(EnterBtn, 8)
+
+-- 2. DEV PANEL TASARIMI (Yumuşak Köşeler ve RGB)
+local DevPanelActive = false
 local DevPanel = Instance.new("Frame", Zenith)
-DevPanel.Name = "DevPanel"; DevPanel.Size = UDim2.new(0, 280, 0, 220); DevPanel.Position = UDim2.new(1, 50, 0.5, -110); DevPanel.BackgroundTransparency = 1; DevPanel.Visible = false
-local DevStroke = UI:Stroke(DevPanel, Color3.new(1,1,1), 0.2); local DevGrad = Instance.new("UIGradient", DevStroke); DevGrad.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(255,0,0)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0,255,0)), ColorSequenceKeypoint.new(1, Color3.fromRGB(0,0,255))})
-RunService.RenderStepped:Connect(function() DevGrad.Rotation = (tick() * 120) % 360 end)
+DevPanel.Name = "DevPanel"; DevPanel.Size = UDim2.new(0, 280, 0, 290); DevPanel.Position = UDim2.new(1, 50, 0.5, -145); DevPanel.BackgroundTransparency = 1; DevPanel.Visible = false
 
-local DevInner = Instance.new("Frame", DevPanel); DevInner.Size = UDim2.new(1, 0, 1, 0); DevInner.BackgroundColor3 = Theme.Main; DevInner.BackgroundTransparency = 0.2; UI:Smooth(DevInner, 14)
-local PillHandle = Instance.new("TextButton", DevInner); PillHandle.Size = UDim2.new(0, 40, 0, 8); PillHandle.Position = UDim2.new(0.5, -20, 0, 8); PillHandle.BackgroundColor3 = Theme.SubText; PillHandle.Text = ""; UI:Smooth(PillHandle, 10)
+local DevInner = Instance.new("Frame", DevPanel)
+DevInner.Size = UDim2.new(1, 0, 1, 0); DevInner.BackgroundColor3 = Theme.Main; UI:Smooth(DevInner, 14) -- Köşeler yumuşatıldı
+local DevStroke = UI:Stroke(DevInner, Color3.new(1,1,1), 0) -- Kontur doğrudan yumuşak iç panele eklendi
+local DevGrad = Instance.new("UIGradient", DevStroke); DevGrad.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(255,0,0)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0,255,0)), ColorSequenceKeypoint.new(1, Color3.fromRGB(0,0,255))})
+RunService.RenderStepped:Connect(function() DevGrad.Rotation = (tick() * 100) % 360 end)
 
--- Panel Sürükleme ve Küçültme (Pill)
-local dragging, startPos, dragStart; PillHandle.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = true; dragStart = i.Position; startPos = DevPanel.Position end end)
+local PillHandle = Instance.new("TextButton", DevInner)
+PillHandle.Size = UDim2.new(0, 40, 0, 6); PillHandle.Position = UDim2.new(0.5, -20, 0, 10); PillHandle.BackgroundColor3 = Theme.SubText; PillHandle.Text = ""; UI:Smooth(PillHandle, 10)
+
+-- Sürükleme Mantığı
+local dragging, startPos, dragStart
+PillHandle.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = true; dragStart = i.Position; startPos = DevPanel.Position end end)
 UserInputService.InputChanged:Connect(function(i) if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then local delta = i.Position - dragStart; DevPanel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) end end)
 UserInputService.InputEnded:Connect(function() dragging = false end)
 
--- PARÇACIK EFEKTİ (Tıklama İçin)
-local function CreateClickEffect(btn)
-    for i = 1, 8 do
-        local p = Instance.new("Frame", btn); p.Size = UDim2.new(0, 6, 0, 6); p.Position = UDim2.new(0.5, 0, 0.5, 0); p.BackgroundColor3 = Color3.fromHSV(math.random(), 0.8, 1); UI:Smooth(p, 10); p.BorderSizePixel = 0
-        local targetPos = UDim2.new(math.random(), 0, math.random(), 0)
-        TweenService:Create(p, TweenInfo.new(0.6), {Position = targetPos, BackgroundTransparency = 1, Size = UDim2.new(0,0,0,0)}):Play()
-        task.delay(0.6, function() p:Destroy() end)
-    end
-end
-
--- OPTİMİZASYON FONKSİYONU ŞABLONU
-local function CreateOptButton(name, desc, overdriveMode)
-    local B = Instance.new("TextButton", DevInner); B.Size = UDim2.new(1, -20, 0, 55); B.Position = overdriveMode and UDim2.new(0, 10, 0, 130) or UDim2.new(0, 10, 0, 60); B.BackgroundColor3 = Theme.Secondary; B.Text = ""; UI:Smooth(B, 10); UI:Stroke(B, Theme.Accent, 0.7); B.ClipsDescendants = true
-    local T = Instance.new("TextLabel", B); T.Text = name; T.Size = UDim2.new(1, 0, 0.5, 0); T.TextColor3 = Theme.Accent; T.Font = "GothamBold"; T.TextSize = 13; T.BackgroundTransparency = 1
-    local D = Instance.new("TextLabel", B); D.Text = desc; D.Size = UDim2.new(1, 0, 0.5, 0); D.Position = UDim2.new(0, 0, 0.5, 0); D.TextColor3 = Theme.SubText; D.Font = "Gotham"; D.TextSize = 10; D.BackgroundTransparency = 1
+-- 3. OPTİMİZASYON BUTONU OLUŞTURUCU (Merkezden Büyüyen Animasyon)
+local function CreateEngineButton(yPos, title, desc, optLevel)
+    local Btn = Instance.new("TextButton", DevInner)
+    Btn.Size = UDim2.new(1, -30, 0, 60); Btn.Position = UDim2.new(0, 15, 0, yPos); Btn.BackgroundColor3 = Theme.Secondary; Btn.Text = ""; UI:Smooth(Btn, 10); UI:Stroke(Btn, Theme.Accent, 0.7); Btn.ClipsDescendants = true
     
-    local ProgressFrame = Instance.new("Frame", B); ProgressFrame.Size = UDim2.new(0, 0, 1, 0); ProgressFrame.Position = UDim2.new(0.5, 0, 0, 0); ProgressFrame.BackgroundColor3 = Theme.Green; ProgressFrame.BackgroundTransparency = 0.6; ProgressFrame.BorderSizePixel = 0; UI:Smooth(ProgressFrame, 10); ProgressFrame.ZIndex = 0
-    local Perc = Instance.new("TextLabel", B); Perc.Size = UDim2.new(1, 0, 1, 0); Perc.TextColor3 = Color3.new(1,1,1); Perc.Font = "GothamBold"; Perc.TextSize = 18; Perc.Text = ""; Perc.BackgroundTransparency = 1; Perc.ZIndex = 2
+    local TitleLabel = Instance.new("TextLabel", Btn)
+    TitleLabel.Size = UDim2.new(1, 0, 0.5, 0); TitleLabel.TextColor3 = Theme.Text; TitleLabel.Font = "GothamBold"; TitleLabel.TextSize = 13; TitleLabel.Text = title; TitleLabel.BackgroundTransparency = 1; TitleLabel.ZIndex = 3
+    
+    local DescLabel = Instance.new("TextLabel", Btn)
+    DescLabel.Size = UDim2.new(1, 0, 0.5, 0); DescLabel.Position = UDim2.new(0, 0, 0.5, 0); DescLabel.TextColor3 = Theme.SubText; DescLabel.Font = "Gotham"; DescLabel.TextSize = 10; DescLabel.Text = desc; DescLabel.BackgroundTransparency = 1; DescLabel.ZIndex = 3
+    
+    -- Yükleme Barı (Merkezden Büyür)
+    local LoadBar = Instance.new("Frame", Btn)
+    LoadBar.AnchorPoint = Vector2.new(0.5, 0.5); LoadBar.Position = UDim2.new(0.5, 0, 0.5, 0); LoadBar.Size = UDim2.new(0, 0, 1, 0); LoadBar.BackgroundColor3 = Theme.Green; LoadBar.BackgroundTransparency = 0.5; LoadBar.BorderSizePixel = 0; UI:Smooth(LoadBar, 10); LoadBar.ZIndex = 2
+    
+    local isApplied = false
+    Btn.MouseButton1Click:Connect(function()
+        if isApplied then return end
+        isApplied = true
+        Instance.new("Sound", Btn, {SoundId = "rbxassetid://12221967", Volume = 1}):Play()
+        
+        -- Buton tıklama küçülme efekti
+        TweenService:Create(Btn, TweenInfo.new(0.1), {Size = UDim2.new(1, -34, 0, 56)}):Play()
+        task.delay(0.1, function() TweenService:Create(Btn, TweenInfo.new(0.1), {Size = UDim2.new(1, -30, 0, 60)}):Play() end)
 
-    B.MouseButton1Click:Connect(function()
-        Instance.new("Sound", B, {SoundId = "rbxassetid://12221967", Volume = 2}):Play(); CreateClickEffect(B)
-        TweenService:Create(B, TweenInfo.new(0.1), {Size = UDim2.new(1, -25, 0, 50)}):Play(); task.delay(0.1, function() TweenService:Create(B, TweenInfo.new(0.1), {Size = UDim2.new(1, -20, 0, 55)}):Play() end)
-        
-        -- Merkezden iki yöne genişleme animasyonu
-        local t = TweenService:Create(ProgressFrame, TweenInfo.new(2.5, Enum.EasingStyle.Quart), {Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 0, 0, 0)})
-        t:Play()
-        
+        -- Yüzde Hesaplama ve Bar Uzama
         task.spawn(function()
-            for i = 0, 100, 2 do Perc.Text = "%"..i; task.wait(0.045) end
-            Perc.Text = "TAMAMLANDI"; task.wait(1); TweenService:Create(Perc, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
-        end)
-
-        t.Completed:Connect(function()
-            if not overdriveMode then
-                -- MOD 1: GÜVENLİ (MOTOR ODAKLI)
-                settings().Physics.AllowSleep = true
-                settings().Physics.PhysicsEnvironmentalThrottle = Enum.EnviromentalPhysicsThrottle.Enabled
-                settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-                task.spawn(function() while task.wait(10) do collectgarbage("collect") end end)
-            else
-                -- MOD 2: AGRESİF (LIMITLERİ ZORLA)
-                setfpscap(120); settings().Physics.PhysicsEnvironmentalThrottle = Enum.EnviromentalPhysicsThrottle.Disabled
-                game:GetService("NetworkSettings").IncomingReplicationLag = 0
-                Lighting.GlobalShadows = false; Lighting.Brightness = 0
-                for _, v in pairs(Workspace:GetDescendants()) do 
-                    if v:IsA("BasePart") then v.CastShadow = false; v.Material = Enum.Material.SmoothPlastic 
-                    elseif v:IsA("Decal") or v:IsA("Texture") then v.Transparency = 1 end
+            TitleLabel.Text = "YÜKLENİYOR: %0"
+            local barTween = TweenService:Create(LoadBar, TweenInfo.new(2, Enum.EasingStyle.Quart), {Size = UDim2.new(1, 0, 1, 0)})
+            barTween:Play()
+            
+            for i = 1, 100 do
+                TitleLabel.Text = "YÜKLENİYOR: %" .. i
+                task.wait(2 / 100) -- Barın süresine oranla artış
+            end
+            
+            -- Uygulandı Efekti (Aydınlanma ve Kararma)
+            TitleLabel.Text = "UYGULANDI!"
+            TitleLabel.TextColor3 = Color3.new(1,1,1)
+            DescLabel.TextTransparency = 1
+            TweenService:Create(Btn, TweenInfo.new(0.3), {BackgroundColor3 = Theme.Green}):Play()
+            
+            -- MOTOR OPTİMİZASYONLARINI ÇALIŞTIR
+            if optLevel == 1 then
+                -- Güvenli Mod
+                pcall(function() settings().Physics.AllowSleep = true end)
+                task.spawn(function() while task.wait(5) do pcall(function() collectgarbage("collect") end) end end)
+            elseif optLevel == 2 then
+                -- Agresif Mod
+                pcall(function() setfpscap(120) end)
+                pcall(function() settings().Rendering.QualityLevel = Enum.QualityLevel.Level01 end)
+                pcall(function() settings().Physics.PhysicsEnvironmentalThrottle = Enum.EnviromentalPhysicsThrottle.Disabled end)
+                pcall(function() game:GetService("NetworkSettings").IncomingReplicationLag = 0 end)
+                Lighting.GlobalShadows = false
+            elseif optLevel == 3 then
+                -- Deneysel Mod (Kendi Eklentim - RAM ve GPU temizliği)
+                pcall(function() Lighting.Technology = Enum.Technology.Compatibility end)
+                pcall(function() game:GetService("ContentProvider"):ClearContext() end)
+                for _, v in pairs(Workspace:GetDescendants()) do
+                    if v:IsA("BasePart") then
+                        v.Material = Enum.Material.SmoothPlastic
+                        v.CastShadow = false
+                        v.Reflectance = 0
+                    elseif v:IsA("Decal") or v:IsA("Texture") then
+                        v.Transparency = 1
+                    end
                 end
             end
+
+            -- 3 Saniye sonra kararma efekti
+            task.wait(3)
+            TweenService:Create(Btn, TweenInfo.new(1), {BackgroundColor3 = Color3.fromRGB(15, 20, 15)}):Play()
+            TweenService:Create(LoadBar, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+            TweenService:Create(TitleLabel, TweenInfo.new(1), {TextColor3 = Theme.SubText}):Play()
         end)
     end)
 end
 
-CreateOptButton("MOTORU STABİLİZE ET", "Kullanıcı deneyimini bozmaz.", false)
-CreateOptButton("OVERDRIVE: 120 FPS", "Agresif limit zorlama (Düşük Grafik)", true)
+CreateEngineButton(30, "1. GÜVENLİ OPTİMİZASYON", "Fizik uyku modu ve arka plan bellek (RAM) temizliği.", 1)
+CreateEngineButton(100, "2. AGRESİF OPTİMİZASYON", "Render API zorlaması, gölge iptali ve ağ (Network) sıfırlama.", 2)
+CreateEngineButton(170, "3. DENEYSEL (EXTREME)", "Işık motorunu eskiye zorlar, kaplamaları silerek GPU'yu boşaltır.", 3)
 
--- Şifre Kontrolü
-DevTrigger:GetPropertyChangedSignal("Text"):Connect(function()
-    if DevTrigger.Text == "dev-zenith" then
-        DevPanel.Visible = true; DevTrigger.Text = "ERİŞİM BAŞARILI"; DevTrigger.TextColor3 = Theme.Green
-        TweenService:Create(DevPanel, Theme.Easing, {Position = UDim2.new(1, -300, 0.5, -110)}):Play()
+-- Enter Tuşu Etkileşimi
+EnterBtn.MouseButton1Click:Connect(function()
+    if DevInput.Text == "dev-zenith" and not DevPanelActive then
+        DevPanelActive = true
+        EnterBtn.Text = "ERİŞİM ONAYLANDI"
+        EnterBtn.BackgroundColor3 = Theme.Green
+        DevPanel.Visible = true
+        TweenService:Create(DevPanel, Theme.Easing, {Position = UDim2.new(1, -300, 0.5, -145)}):Play()
+    elseif DevInput.Text ~= "dev-zenith" then
+        EnterBtn.Text = "HATALI ŞİFRE!"
+        EnterBtn.BackgroundColor3 = Theme.Red
+        task.wait(1.5)
+        EnterBtn.Text = "ENTER"
+        EnterBtn.BackgroundColor3 = Theme.Accent
     end
 end)
+
 
 print("• ZENITH V18: AESTHETIC ULTRA LOADED. [Bağımsız Kapanış Ekranı & Otomatik Başlama Aktif]")
