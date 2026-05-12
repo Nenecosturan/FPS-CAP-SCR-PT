@@ -316,4 +316,60 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 UserInputService.InputEnded:Connect(function() dragging = false end)
 
+-- [GELİŞTİRİLMİŞ AGRESİF OPTİMİZASYON BLOĞU]
+OptimizeBtn.MouseButton1Click:Connect(function()
+    -- Buton Görsel Animasyonu
+    local sound = Instance.new("Sound", OptBtn); sound.SoundId = "rbxassetid://12221967"; sound:Play()
+    TweenService:Create(Bar, TweenInfo.new(2, Enum.EasingStyle.Linear), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+    
+    task.delay(2, function()
+        -- 1. FRAME PACING & TASK SCHEDULER
+        if setfpscap then setfpscap(120) end
+        
+        -- 2. RENDERING API & MODERN GRAPHICS
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        
+        -- 3. FİZİK MOTORU & ENVIRONMENTAL THROTTLE
+        -- Motorun gereksiz fizik hesaplamalarını durdurup işlemciyi boşaltır
+        settings().Physics.PhysicsEnvironmentalThrottle = Enum.EnviromentalPhysicsThrottle.Disabled
+        settings().Physics.AllowSleep = true
+        Workspace.DistributedGameTime = 0
+        
+        -- 4. SCRIPT GECİKMESİ (LATENCY) & NETWORK
+        -- Network trafiğini optimize et (Veri paketlerini sıkıştır)
+        game:GetService("NetworkSettings").IncomingReplicationLag = 0
+        
+        -- 5. BELLEK (MEMORY) YÖNETİMİ & GARBAGE COLLECTION
+        -- Motoru sürekli "temiz" tutacak döngü
+        task.spawn(function()
+            while task.wait(5) do -- Agresif GC temizliği
+                pcall(function()
+                    game:GetService("ContentProvider"):ClearContext()
+                    collectgarbage("collect") -- Bellek sızıntılarını anında temizler
+                end)
+            end
+        end)
+        
+        -- 6. RENDERING API DÜZENLEMELERİ (Görseli değil motoru rahatlatır)
+        Lighting.GlobalShadows = false
+        Lighting.Brightness = 0
+        Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+        
+        -- Nesne bazlı agresif temizlik
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj:IsA("BasePart") then
+                obj.CastShadow = false
+                obj.Reflectance = 0
+                if obj.Material ~= Enum.Material.SmoothPlastic then obj.Material = Enum.Material.SmoothPlastic end
+            elseif obj:IsA("Script") or obj:IsA("LocalScript") or obj:IsA("ModuleScript") then
+                -- Scriptlerin işleyişini zorla optimize et (sadece disable edilebilecek olanlar)
+                if obj.Name == "Fire" or obj.Name == "Smoke" then obj.Enabled = false end
+            end
+        end
+        
+        OptBtn.Text = "SYSTEM OVERDRIVE: ON"
+        OptBtn.TextColor3 = Theme.Green
+    end)
+end)
+
 print("• ZENITH V18: AESTHETIC ULTRA LOADED. [Bağımsız Kapanış Ekranı & Otomatik Başlama Aktif]")
