@@ -450,66 +450,83 @@ EnterBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+--- ============================================================================
+-- [GÜNCEL: SAĞ ÜST BOYUTLANDIRMA VE MOBİL ETKİLEŞİM KORUMASI]
 -- ============================================================================
--- [YENİ: GÜVENLİ BOYUTLANDIRMA VE SÜRÜKLEME MANTIĞI]
--- ============================================================================
+
+-- 1. ÜST BUTONLARI SOLA KAYDIRMA (Yer Açmak İçin)
+-- Mevcut Btns frame'inin pozisyonunu güncelle:
+Btns.Position = UDim2.new(1, -155, 0, 0) -- Butonları 35 piksel daha sola çektik
+
+-- 2. BOYUTLANDIRMA BUTONU (Sağ Üst Köşe)
+local ResizeIcon = Instance.new("TextButton", Main)
+ResizeIcon.Name = "ResizeIcon"
+ResizeIcon.Size = UDim2.new(0, 24, 0, 24)
+ResizeIcon.Position = UDim2.new(1, -28, 0, 10) -- Sağ üst köşede boş kalan yere yerleşti
+ResizeIcon.BackgroundTransparency = 1
+ResizeIcon.Text = "⛶" -- Modern genişletme ikonu
+ResizeIcon.TextColor3 = Theme.SubText
+ResizeIcon.Font = "GothamBold"
+ResizeIcon.TextSize = 18
+ResizeIcon.ZIndex = 11
 
 local isResizing = false
 local isDragging = false
 
--- Bildirim Sistemi
-local function ShowNotification(msg)
-    local note = Instance.new("TextLabel", Zenith)
-    note.Size = UDim2.new(0, 300, 0, 40); note.Position = UDim2.new(0.5, -150, 0.9, 0); note.BackgroundColor3 = Theme.Red; note.TextColor3 = Color3.new(1,1,1); note.Text = msg; note.Font = "GothamBold"; UI:Smooth(note, 8)
-    TweenService:Create(note, TweenInfo.new(0.5), {Position = UDim2.new(0.5, -150, 0.85, 0)}):Play()
-    task.wait(2)
-    TweenService:Create(note, TweenInfo.new(0.5), {Position = UDim2.new(0.5, -150, 0.95, 0), BackgroundTransparency = 1, TextTransparency = 1}):Play()
-    task.delay(0.5, function() note:Destroy() end)
-end
-
--- Boyutlandırma İkonu (Sağ alt köşe)
-local ResizeIcon = Instance.new("TextButton", Main)
-ResizeIcon.Name = "ResizeIcon"; ResizeIcon.Size = UDim2.new(0, 20, 0, 20); ResizeIcon.Position = UDim2.new(1, -22, 1, -22); ResizeIcon.BackgroundTransparency = 1; ResizeIcon.Text = "◢"; ResizeIcon.TextColor3 = Theme.SubText; ResizeIcon.Font = "GothamBold"; ResizeIcon.TextSize = 18; ResizeIcon.ZIndex = 10
-
--- SÜRÜKLEME MANTIĞI
+-- 3. SÜRÜKLEME VE BOYUTLANDIRMA MANTIĞI
 Topbar.InputBegan:Connect(function(input) 
     if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not isResizing then 
-        isDragging = true; dragStart = input.Position; startPos = Main.Position 
+        isDragging = true
+        dragStart = input.Position
+        startPos = Main.Position 
     end 
 end)
 
--- BOYUTLANDIRMA MANTIĞI
 ResizeIcon.InputBegan:Connect(function(input)
     if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-        if isMicro then
+        -- Hem Mikro hem de Normal küçültme modunda kontrol yapıyoruz
+        if isMicro or minimized then
             ShowNotification("boyut ayarlama işlemi için scriptin tam ekran olması lazım")
             return
         end
+        
         isResizing = true
         resizeStartPos = input.Position
         startSize = Main.Size
+        
+        -- MOBİL KORUMASI: Boyutlandırma sırasında barlarla etkileşimi kes
+        Content.ScrollingEnabled = false
+        Main.ClipsDescendants = true -- İçeriklerin dışarı taşmasını önler
     end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    -- Sürükleme
+    -- Pencere Taşıma (Dragging)
     if isDragging and not isResizing then
         local delta = input.Position - dragStart
         Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
-    -- Boyutlandırma
+    
+    -- Pencere Boyutlandırma (Resizing)
     if isResizing then
         local delta = input.Position - resizeStartPos
-        local newWidth = math.clamp(startSize.X.Offset + delta.X, 350, 800)
-        local newHeight = math.clamp(startSize.Y.Offset + delta.Y, 300, 600)
+        -- math.clamp ile sınırları belirledik (Min Genişlik: 350, Min Yükseklik: 300)
+        local newWidth = math.clamp(startSize.X.Offset + delta.X, 350, 900)
+        local newHeight = math.clamp(startSize.Y.Offset + delta.Y, 300, 700)
+        
         Main.Size = UDim2.new(0, newWidth, 0, newHeight)
     end
 end)
 
-UserInputService.InputEnded:Connect(function()
-    isDragging = false
-    isResizing = false
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isDragging = false
+        isResizing = false
+        -- Etkileşimi geri aç
+        Content.ScrollingEnabled = true
+    end
 end)
+
 
 
 print("• ZENITH V18: AESTHETIC ULTRA LOADED. [Bağımsız Kapanış Ekranı & Otomatik Başlama Aktif]")
