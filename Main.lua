@@ -450,5 +450,62 @@ EnterBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+-- ============================================================================
+-- [YENİ: DİNAMİK BOYUTLANDIRMA (RESIZE) SİSTEMİ]
+-- ============================================================================
+
+local ResizeIcon = Instance.new("TextButton", Main)
+ResizeIcon.Name = "ResizeIcon"
+ResizeIcon.Size = UDim2.new(0, 20, 0, 20)
+ResizeIcon.Position = UDim2.new(1, -25, 0, 5) -- Sağ üst köşe
+ResizeIcon.BackgroundTransparency = 1
+ResizeIcon.Text = "↘" -- Boyutlandırma işareti
+ResizeIcon.TextColor3 = Theme.SubText
+ResizeIcon.Font = "GothamBold"
+ResizeIcon.TextSize = 18
+ResizeIcon.ZIndex = 10
+
+-- Mouse üzerine gelince parlama efekti
+ResizeIcon.MouseEnter:Connect(function()
+    TweenService:Create(ResizeIcon, TweenInfo.new(0.3), {TextColor3 = Theme.Accent}):Play()
+end)
+
+ResizeIcon.MouseLeave:Connect(function()
+    TweenService:Create(ResizeIcon, TweenInfo.new(0.3), {TextColor3 = Theme.SubText}):Play()
+end)
+
+local resizing = false
+local resizeStartPos
+local startSize
+
+ResizeIcon.InputBegan:Connect(function(input)
+    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+        resizing = true
+        resizeStartPos = input.Position
+        startSize = Main.Size
+        
+        -- Boyutlandırma sırasında içeriğin kaymaması için kaydırmayı geçici durdurabiliriz
+        Content.ScrollingEnabled = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if resizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - resizeStartPos
+        
+        -- Yeni boyut hesaplama (Offset üzerinden)
+        local newWidth = math.max(300, startSize.X.Offset + delta.X) -- Minimum 300 genişlik
+        local newHeight = math.max(200, startSize.Y.Offset + delta.Y) -- Minimum 200 yükseklik
+        
+        Main.Size = UDim2.new(0, newWidth, 0, newHeight)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        resizing = false
+        Content.ScrollingEnabled = true
+    end
+end)
 
 print("• ZENITH V18: AESTHETIC ULTRA LOADED. [Bağımsız Kapanış Ekranı & Otomatik Başlama Aktif]")
