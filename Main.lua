@@ -236,9 +236,9 @@ UserInputService.InputChanged:Connect(function(input)
             
             -- Ekrandaki görünür pikselleri hesapla
             local visX = math.max(0, math.min(pos.X + size.X, vp.X) - math.max(pos.X, 0))
-            local visY = math.max(0, math.min(pos.Y + size.Y, vp.Y) - math.max(pos.Y, 0))
-            local visArea = visX * visY
-            local totalArea = size.X * size.Y
+
+            local visArea = visX
+            local totalArea = size.X
             
             -- Eğer %25 (Çeyrek) ekran dışındaysa
             if visArea < totalArea * 0.75 then
