@@ -326,7 +326,7 @@ local InputFrame = Instance.new("Frame", Content)
 InputFrame.Size = UDim2.new(1, -10, 0, 85); InputFrame.BackgroundTransparency = 1
 
 local DevInput = Instance.new("TextBox", InputFrame)
-DevInput.Size = UDim2.new(1, 0, 0, 40); DevInput.BackgroundColor3 = Theme.Secondary; DevInput.TextColor3 = Theme.Text; DevInput.PlaceholderText = "Şifre (dev-zenith)"; DevInput.Font = "GothamMedium"; DevInput.TextSize = 13; UI:Smooth(DevInput, 10); UI:Stroke(DevInput, Theme.Accent, 0.6)
+DevInput.Size = UDim2.new(1, 0, 0, 40); DevInput.BackgroundColor3 = Theme.Secondary; DevInput.TextColor3 = Theme.Text; DevInput.PlaceholderText = "Şifreyi giriniz..."; DevInput.Font = "GothamMedium"; DevInput.TextSize = 13; UI:Smooth(DevInput, 10); UI:Stroke(DevInput, Theme.Accent, 0.6)
 
 local EnterBtn = Instance.new("TextButton", InputFrame)
 EnterBtn.Size = UDim2.new(1, 0, 0, 35); EnterBtn.Position = UDim2.new(0, 0, 0, 50); EnterBtn.BackgroundColor3 = Theme.Accent; EnterBtn.TextColor3 = Color3.new(1,1,1); EnterBtn.Font = "GothamBold"; EnterBtn.Text = "ENTER"; EnterBtn.TextSize = 14; UI:Smooth(EnterBtn, 8)
@@ -384,11 +384,11 @@ local function CreateEngineButton(yPos, title, desc, optLevel)
             
             for i = 1, 100 do
                 TitleLabel.Text = "YÜKLENİYOR: %" .. i
-                task.wait(2 / 100) -- Barın süresine oranla artış
+                task.wait(4 / 100) -- Barın süresine oranla artış
             end
             
             -- Uygulandı Efekti (Aydınlanma ve Kararma)
-            TitleLabel.Text = "UYGULANDI!"
+            TitleLabel.Text = "UYGULANDI"
             TitleLabel.TextColor3 = Color3.new(1,1,1)
             DescLabel.TextTransparency = 1
             TweenService:Create(Btn, TweenInfo.new(0.3), {BackgroundColor3 = Theme.Green}):Play()
