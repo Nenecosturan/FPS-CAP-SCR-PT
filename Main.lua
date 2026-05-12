@@ -278,7 +278,7 @@ UI:Toggle("FPS Limitini Uygula", false, function(s)
     end
 end)
 
-UI:Slider("Hedef FPS Değeri", 1, 5500, 60, function(val)
+UI:Slider("Hedef FPS Değeri", 3, 550, 60, function(val)
     currentFPSLimit = val
     if isFPSApplyEnabled and setfpscap then setfpscap(val) end
 end)
