@@ -1,8 +1,5 @@
--- ============================================================================
--- •PIOP• ZENITH V18 - AESTHETIC ULTRA EDITION
--- FIX: FULL CANVAS-GROUP CLIPPING (ZERO SHARP EDGES)
--- FEATURES: SMOOTH FPS HUD | MASTER APPLY SWITCH | SWAPPED BUTTONS
--- ============================================================================
+
+-- •PIOP• ZENITH V18 =================================================
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
