@@ -1,12 +1,31 @@
 -- ============================================================================
--- •PIOP• ZENITH V18 - AESTHETIC ULTRA EDITION (GÜNCELLENDİ)
--- EKLENENLER: MICRO-MINIMIZE | 120+ HZ TESPİTİ | EKRAN DIŞI KORUMA(OOB)
+-- •PIOP• ZENITH V18 - AESTHETIC ULTRA EDITION (STABİL SÜRÜM)
+-- YENİ: BAĞIMSIZ KAPANIŞ EKRANI | TELEPORT KORUMASI | AUTOEXEC DOSYA SİSTEMİ
 -- ============================================================================
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
+
+-- [0. OTOMATİK BAŞLAMA VE DOSYA SİSTEMİ MANTIĞI]
+local StateFileName = "ZenithClosed_State.txt"
+local LoadstringURL = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/Nenecosturan/FPS-CAP-SCR-PT/refs/heads/main/Main.lua"))()'
+
+-- Eğer kullanıcı scripti kapatma tuşuyla kapattıysa, autoexec klasöründen çalışmasını engellemek için kontrol
+if isfile and isfile(StateFileName) then
+    local state = readfile(StateFileName)
+    if state == "CLOSED" then
+        -- Durumu sıfırla ki kullanıcı manuel olarak tekrar çalıştırabilsin
+        if delfile then delfile(StateFileName) end 
+        return -- Scripti burada durdur
+    end
+end
+
+-- Sunucu değiştirmelerde (Teleport) otomatik tekrar çalışması için sıraya al
+if queue_on_teleport then
+    queue_on_teleport(LoadstringURL)
+end
 
 -- [1. TEMA AYARLARI]
 local Theme = {
@@ -32,7 +51,6 @@ task.spawn(function()
         for _, t in pairs(frameTimes) do avg = avg + t end
         local detected = math.floor((1 / (avg / #frameTimes)) + 5)
         
-        -- YENİLİK: Belirttiğin FPS değer aralıkları
         if detected >= 124 then
             MaxHardwareHz = "120+"
         elseif detected >= 63 then
@@ -70,7 +88,7 @@ UI:Stroke(FloatingHUD, Theme.Accent, 0.4)
 local HUDLabel = Instance.new("TextLabel", FloatingHUD)
 HUDLabel.Size = UDim2.new(1, 0, 1, 0); HUDLabel.BackgroundTransparency = 1; HUDLabel.Font = "GothamBold"; HUDLabel.TextSize = 13; HUDLabel.TextColor3 = Theme.Green; HUDLabel.Text = "FPS: --"
 
--- [4. ANA PENCERE (CANVASGROUP - GERÇEK KESİM)]
+-- [4. ANA PENCERE (CANVASGROUP)]
 local Main = Instance.new("CanvasGroup", Zenith)
 Main.Size = UDim2.new(0, 460, 0, 420)
 Main.Position = UDim2.new(0.5, -230, 0.5, -210)
@@ -81,6 +99,30 @@ UI:Smooth(Main, 18)
 UI:Stroke(Main, Theme.Accent, 0.3)
 
 TweenService:Create(Main, TweenInfo.new(0.8, Enum.EasingStyle.Quart), {GroupTransparency = 0}):Play()
+
+-- [YENİLİK: BAĞIMSIZ KAPANIŞ YÜKLEME EKRANI (SEPARATE MENU)]
+local LoadingOverlay = Instance.new("Frame", Zenith)
+LoadingOverlay.Size = UDim2.new(1, 0, 1, 0)
+LoadingOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+LoadingOverlay.BackgroundTransparency = 0.5
+LoadingOverlay.Visible = false
+LoadingOverlay.ZIndex = 9999
+LoadingOverlay.Active = true -- Arkaya tıklanmayı engeller
+
+local LoadingBox = Instance.new("Frame", LoadingOverlay)
+LoadingBox.Size = UDim2.new(0, 320, 0, 80)
+LoadingBox.Position = UDim2.new(0.5, -160, 0.5, -40)
+LoadingBox.BackgroundColor3 = Theme.Main
+UI:Smooth(LoadingBox, 14)
+UI:Stroke(LoadingBox, Theme.Accent, 0.3)
+
+local LoadingText = Instance.new("TextLabel", LoadingBox)
+LoadingText.Size = UDim2.new(1, 0, 1, 0)
+LoadingText.BackgroundTransparency = 1
+LoadingText.Text = "Değişiklikler düzeltiliyor..."
+LoadingText.TextColor3 = Theme.Accent
+LoadingText.Font = "GothamBold"
+LoadingText.TextSize = 16
 
 -- [5. TOPBAR VE BUTONLAR]
 local Topbar = Instance.new("Frame", Main)
@@ -100,9 +142,8 @@ local Btns = Instance.new("Frame", Topbar)
 Btns.Size = UDim2.new(0, 110, 1, 0); Btns.Position = UDim2.new(1, -120, 0, 0); Btns.BackgroundTransparency = 1
 local UIList = Instance.new("UIListLayout", Btns)
 UIList.FillDirection = "Horizontal"; UIList.HorizontalAlignment = "Right"; UIList.VerticalAlignment = "Center"; UIList.Padding = UDim.new(0, 10)
-UIList.SortOrder = Enum.SortOrder.LayoutOrder -- Buton sıralamasını korumak için
+UIList.SortOrder = Enum.SortOrder.LayoutOrder
 
--- YENİLİK: Micro-Minimize Butonu (Başlangıçta görünmez)
 local MicroBtn = Instance.new("TextButton", Btns)
 MicroBtn.LayoutOrder = 1
 MicroBtn.Size = UDim2.new(0, 24, 0, 24); MicroBtn.BackgroundColor3 = Theme.Accent; MicroBtn.Text = "▶"; MicroBtn.TextColor3 = Color3.new(1,1,1); MicroBtn.Font = "GothamBold"; MicroBtn.TextSize = 14
@@ -117,25 +158,37 @@ local CloseBtn = Instance.new("TextButton", Btns)
 CloseBtn.LayoutOrder = 3
 CloseBtn.Size = UDim2.new(0, 24, 0, 24); CloseBtn.BackgroundColor3 = Theme.Red; CloseBtn.Text = "×"; CloseBtn.TextColor3 = Color3.new(1,1,1); CloseBtn.Font = "GothamBold"; CloseBtn.TextSize = 18; UI:Smooth(CloseBtn, 12)
 
-CloseBtn.MouseButton1Click:Connect(function() Zenith:Destroy() end)
+-- KAPATMA TUŞU MANTIĞI EKLENDİ (Bağımsız Kapanış Ekranı)
+CloseBtn.MouseButton1Click:Connect(function() 
+    -- Ana menüyü gizle ve bağımsız yükleme ekranını göster
+    Main.Visible = false
+    FloatingHUD.Visible = false
+    LoadingOverlay.Visible = true
+    
+    -- "CLOSED" durumunu kaydet (Autoexec'in diğer oyunda açılmasını engeller)
+    if writefile then pcall(function() writefile(StateFileName, "CLOSED") end) end
+    
+    -- Yazıya hafif bir yanıp sönme efekti verelim
+    TweenService:Create(LoadingText, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {TextTransparency = 0.5}):Play()
+    
+    task.wait(2) 
+    
+    if setfpscap then setfpscap(60) end 
+    Zenith:Destroy() 
+end)
 
 local minimized = false
 local isMicro = false
 
--- Micro-Minimize Tıklama İşlevi
 MicroBtn.MouseButton1Click:Connect(function()
     isMicro = not isMicro
-    -- Üstten sağdan sola -180 derece dönme animasyonu
     TweenService:Create(MicroBtn, Theme.Easing, {Rotation = isMicro and -180 or 0}):Play()
-    -- Sadece butonlar kalacak kadar daralt (120 piksel)
     TweenService:Create(Main, Theme.Easing, {Size = isMicro and UDim2.new(0, 120, 0, 45) or UDim2.new(0, 460, 0, 45)}):Play()
 end)
 
--- Ana Minimize Tıklama İşlevi
 MiniBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
     
-    -- Geri açılıyorsa Micro modu da sıfırla
     if not minimized and isMicro then
         isMicro = false
         MicroBtn.Rotation = 0
@@ -144,7 +197,6 @@ MiniBtn.MouseButton1Click:Connect(function()
     local targetSize = minimized and UDim2.new(0, 460, 0, 45) or UDim2.new(0, 460, 0, 420)
     TweenService:Create(Main, Theme.Easing, {Size = targetSize}):Play()
     
-    -- Aydınlanarak belirme ve kaybolma animasyonu
     if minimized then
         MicroBtn.Visible = true
         TweenService:Create(MicroBtn, TweenInfo.new(0.4), {BackgroundTransparency = 0, TextTransparency = 0}):Play()
@@ -155,103 +207,7 @@ MiniBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ============================================================================
--- [YENİLİK: EKRAN DIŞI KORUMA (OOB) & UYARI EKRANI]
--- ============================================================================
-local WarningOverlay = Instance.new("Frame", Zenith)
-WarningOverlay.Size = UDim2.new(1, 0, 1, 0)
-WarningOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-WarningOverlay.BackgroundTransparency = 0.6
-WarningOverlay.Visible = false
-WarningOverlay.ZIndex = 999
-
-local WarnBox = Instance.new("Frame", WarningOverlay)
-WarnBox.Size = UDim2.new(0, 320, 0, 140)
-WarnBox.Position = UDim2.new(0.5, -160, 0.5, -70)
-WarnBox.BackgroundColor3 = Theme.Main
-UI:Smooth(WarnBox, 14)
-UI:Stroke(WarnBox, Theme.Accent, 0.2)
-
-local WarnText = Instance.new("TextLabel", WarnBox)
-WarnText.Size = UDim2.new(1, -20, 0, 70)
-WarnText.Position = UDim2.new(0, 10, 0, 10)
-WarnText.BackgroundTransparency = 1
-WarnText.Text = "Scripti ekran dışına almak istediğinize emin misiniz?"
-WarnText.TextColor3 = Theme.Text
-WarnText.Font = "GothamMedium"
-WarnText.TextSize = 14
-WarnText.TextWrapped = true
-
-local BtnYes = Instance.new("TextButton", WarnBox)
-BtnYes.Size = UDim2.new(0, 100, 0, 35)
-BtnYes.Position = UDim2.new(0, 40, 1, -45)
-BtnYes.BackgroundColor3 = Theme.Green
-BtnYes.Text = "Evet"
-BtnYes.TextColor3 = Color3.fromRGB(0,0,0)
-BtnYes.Font = "GothamBold"; BtnYes.TextSize = 14; UI:Smooth(BtnYes, 8)
-
-local BtnNo = Instance.new("TextButton", WarnBox)
-BtnNo.Size = UDim2.new(0, 100, 0, 35)
-BtnNo.Position = UDim2.new(1, -140, 1, -45)
-BtnNo.BackgroundColor3 = Theme.Red
-BtnNo.Text = "Hayır"
-BtnNo.TextColor3 = Color3.new(1,1,1)
-BtnNo.Font = "GothamBold"; BtnNo.TextSize = 14; UI:Smooth(BtnNo, 8)
-
-local boundsIgnored = false
-local warningShown = false
-
-BtnYes.MouseButton1Click:Connect(function()
-    boundsIgnored = true
-    WarningOverlay.Visible = false
-end)
-
-BtnNo.MouseButton1Click:Connect(function()
-    warningShown = false -- Bir dahaki çıkışta tekrar sorabilsin
-    WarningOverlay.Visible = false
-    -- O anki haline göre genişlik/yükseklik belirleyip merkeze al
-    local curW = isMicro and 120 or 460
-    local curH = minimized and 45 or 420
-    TweenService:Create(Main, Theme.Easing, {Position = UDim2.new(0.5, -curW/2, 0.5, -curH/2)}):Play()
-end)
-
--- Sürükleme Mantığı ve Ekran Dışı Denetleyici
-local dragging, dragStart, startPos
-Topbar.InputBegan:Connect(function(input) 
-    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
-        dragging = true; dragStart = input.Position; startPos = Main.Position 
-    end 
-end)
-
-UserInputService.InputChanged:Connect(function(input) 
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then 
-        local delta = input.Position - dragStart 
-        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) 
-        
-        -- YENİLİK: Ekran Dışına Çıkma (OOB) Hesaplaması
-        if not boundsIgnored and not warningShown then
-            local vp = workspace.CurrentCamera.ViewportSize
-            local pos = Main.AbsolutePosition
-            local size = Main.AbsoluteSize
-            
-            -- Ekrandaki görünür pikselleri hesapla
-            local visX = math.max(0, math.min(pos.X + size.X, vp.X) - math.max(pos.X, 0))
-
-            local visArea = visX
-            local totalArea = size.X
-            
-            -- Eğer %25 (Çeyrek) ekran dışındaysa
-            if visArea < totalArea * 0.75 then
-                dragging = false -- Sürüklemeyi zorla durdur
-                warningShown = true
-                WarningOverlay.Visible = true
-            end
-        end
-    end 
-end)
-UserInputService.InputEnded:Connect(function() dragging = false end)
-
--- [6. İÇERİK ALANI VE MODÜLLER]
+-- [İçerik Alanı ve Diğer Modüller...]
 local Content = Instance.new("ScrollingFrame", Main)
 Content.Size = UDim2.new(1, -20, 1, -65); Content.Position = UDim2.new(0, 10, 0, 55); Content.BackgroundTransparency = 1; Content.ScrollBarThickness = 2; Content.AutomaticCanvasSize = "Y"; Content.CanvasSize = UDim2.new(0,0,0,0)
 UI:Smooth(Content, 10)
@@ -345,4 +301,19 @@ task.spawn(function()
     end)
 end)
 
-print("• ZENITH V18: AESTHETIC ULTRA LOADED. [Ekran Dışı Koruma Aktif]")
+-- Sürükleme Mantığı (OOB iptal edildiği için sadece basit sürükleme var)
+local dragging, dragStart, startPos
+Topbar.InputBegan:Connect(function(input) 
+    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
+        dragging = true; dragStart = input.Position; startPos = Main.Position 
+    end 
+end)
+UserInputService.InputChanged:Connect(function(input) 
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then 
+        local delta = input.Position - dragStart 
+        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) 
+    end 
+end)
+UserInputService.InputEnded:Connect(function() dragging = false end)
+
+print("• ZENITH V18: AESTHETIC ULTRA LOADED. [Bağımsız Kapanış Ekranı & Otomatik Başlama Aktif]")
